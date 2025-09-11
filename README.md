@@ -1,5 +1,36 @@
 # Proyecto_Entornos_GestionVentas
 
+# Sistema de Gestión de Ventas - Múltiples Sucursales
 
-link de Jira: https://thephoneguy321987456123.atlassian.net/jira/software/projects/SCRUM/boards/1?atlOrigin=eyJpIjoiNmI1MmZiYjJhYWExNDJjZjkzZDVlZDAyNGI3YjExYTgiLCJwIjoiaiJ9 
+Este proyecto es un **sistema de gestión de ventas** diseñado para administrar operaciones comerciales en varias sucursales.  
+Permite gestionar clientes, empleados, productos y registrar ventas con sus respectivos detalles, manteniendo un control centralizado de la información.
 
+---
+
+## Características principales
+- 📍 **Sucursales**: administración de varias sedes de venta.
+- 👨‍💼 **Empleados**: gestión de personal por sucursal.
+- 🧑‍🤝‍🧑 **Clientes**: registro y control de clientes frecuentes.
+- 📦 **Productos**: inventario con stock, precios y disponibilidad.
+- 🧾 **Ventas**: registro de transacciones con detalle de productos.
+- 📊 **Reportes**: posibilidad de generar reportes de ventas por sucursal, cliente o producto.
+
+---
+
+## Modelo de Base de Datos
+
+El sistema se apoya en una base de datos relacional que sigue este diseño:
+
+![Diagrama de la Base de Datos](diseño_bd.png)
+
+---
+
+## 🛠️ Tecnologías utilizadas
+- **Java 21 / Spring Boot** → Backend y servicios REST.
+- **PostgreSQL** → Base de datos principal.
+- **Angular**  → Front del servicio.
+
+---
+
+## link de Jira: 
+https://thephoneguy321987456123.atlassian.net/jira/software/projects/SCRUM/boards/1?atlOrigin=eyJpIjoiNmI1MmZiYjJhYWExNDJjZjkzZDVlZDAyNGI3YjExYTgiLCJwIjoiaiJ9 
