@@ -1,5 +1,3 @@
-# Proyecto_Entornos_GestionVentas
-
 # Sistema de Gestión de Ventas - Múltiples Sucursales
 
 Este proyecto es un **sistema de gestión de ventas** diseñado para administrar operaciones comerciales en varias sucursales.  
