@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './login.css';
 
 const Login: React.FC = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -14,14 +16,16 @@ const Login: React.FC = () => {
                 throw new Error('Error al conectar con la API');
             }
             const users = await response.json();
-            // Ajusta los nombres de las propiedades según tu API
             const user = users.find(
                 (u: any) => u.nombre === username && u.contraseña === password
             );
             if (user) {
                 setError('');
-                alert('¡Inicio de sesión exitoso!');
+                // Guarda un "token" de sesión para las rutas privadas
+                localStorage.setItem("token", "tokenDePrueba123");
                 console.log('Usuario autenticado:', user);
+                // Redirige a la página de administración
+                navigate('/administracion');
             } else {
                 setError('Usuario o contraseña incorrectos');
             }
