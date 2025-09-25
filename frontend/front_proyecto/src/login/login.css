@@ -1,81 +1,74 @@
-/* Fondo de toda la página */
-.login-page {
-  background-color: #000; /* negro */
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
+/* Login.module.css */
+/* Contenedor principal para toda la página de login */
 
-body {
-    min-height: 100vh;
-}
+
+
+
+
 
 .login-page {
-    min-height: 100vh;
+    background-color: #121212; /* Un gris oscuro para una vista más moderna */
+    height: 91.329vh; /* Altura completa de la ventana menos la altura del navbar */
     width: 100vw;
     display: flex;
     justify-content: center;
     align-items: center;
-}
-.login-card {
-  background-color: #fff; /* blanco */
-  padding: 2rem;
-  border-radius: 12px; /* bordes redondeados */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  width: 350px;
-  text-align: center;
+    padding: 20px;
+    box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
 }
 
-/* Estilos del formulario */
+/* Tarjeta o contenedor del formulario de login */
+.login-card {
+    background-color: #fff;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    width: 380px;
+    max-width: 90vw;
+    text-align: center;
+}
+
+/* Estilos del formulario y sus elementos */
 .form-group {
-  margin-bottom: 1rem;
-  text-align: left;
+    margin-bottom: 1.25rem;
+    text-align: left;
 }
 
 .form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: bold;
-  color: #333;
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600; /* Un poco más de peso a la fuente */
+    color: #444;
 }
 
 .form-group input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  outline: none;
+    width: 100%;
+    padding: 12px; /* Un poco más de padding para mejor clicabilidad */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.3s ease;
 }
 
 .form-group input:focus {
-  border-color: #007bff;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
-/* Botón */
+/* Estilos para el botón de login */
 .btn-login {
-  background-color: #000000;
-  color: white;
-  border: none;
-  padding: 10px;
-  width: 100%;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
+    background-color: #2563eb; /* Un azul más vibrante, igual al del navbar */
+    color: white;
+    border: none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
 }
 
 .btn-login:hover {
-  background-color: #232121;
-}
-
-/* Mensaje de error */
-.error {
-  color: red;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
+    background-color: #1e52c7; /* Azul más oscuro al pasar el ratón */
 }
