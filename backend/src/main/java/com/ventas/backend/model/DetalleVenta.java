@@ -4,12 +4,14 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 @Entity
+@Table(name = "detalle_venta")
 public class DetalleVenta {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name="venta_id")
+    @JoinColumn(name = "venta_id")
     private Venta venta;
 
     @ManyToOne
@@ -22,6 +24,7 @@ public class DetalleVenta {
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }

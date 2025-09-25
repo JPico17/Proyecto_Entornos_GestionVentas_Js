@@ -6,13 +6,27 @@ const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (username === 'admin' && password === 'password') {
-            setError('');
-            alert('Login successful!');
-        } else {
-            setError('Invalid username or password');
+        try {
+            const response = await fetch('http://localhost:9090/api/empleados');
+            if (!response.ok) {
+                throw new Error('Error al conectar con la API');
+            }
+            const users = await response.json();
+            // Ajusta los nombres de las propiedades según tu API
+            const user = users.find(
+                (u: any) => u.nombre === username && u.contraseña === password
+            );
+            if (user) {
+                setError('');
+                alert('¡Inicio de sesión exitoso!');
+                console.log('Usuario autenticado:', user);
+            } else {
+                setError('Usuario o contraseña incorrectos');
+            }
+        } catch (err) {
+            setError('Error al conectar con el servidor');
         }
     };
 
