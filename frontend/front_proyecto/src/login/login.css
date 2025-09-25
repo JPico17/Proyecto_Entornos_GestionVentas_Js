@@ -1,0 +1,81 @@
+/* Fondo de toda la página */
+.login-page {
+  background-color: #000; /* negro */
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+}
+
+.login-page {
+    min-height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.login-card {
+  background-color: #fff; /* blanco */
+  padding: 2rem;
+  border-radius: 12px; /* bordes redondeados */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  width: 350px;
+  text-align: center;
+}
+
+/* Estilos del formulario */
+.form-group {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: bold;
+  color: #333;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: #007bff;
+}
+
+/* Botón */
+.btn-login {
+  background-color: #000000;
+  color: white;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-login:hover {
+  background-color: #232121;
+}
+
+/* Mensaje de error */
+.error {
+  color: red;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
