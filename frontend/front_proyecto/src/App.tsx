@@ -8,6 +8,7 @@ import Dashboard from "./components/Dashboard/Dashboard";
 import MySales from "./components/MySales/MySales";
 import SalesForm from "./components/SalesForm/SalesForm";
 
+
 const App: React.FC = () => {
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
