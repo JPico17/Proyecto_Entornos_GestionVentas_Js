@@ -63,7 +63,10 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="d-flex align-items-center justify-content-center vh-100 bg-light">
+    <div
+      className="d-flex align-items-center justify-content-center bg-light"
+      style={{ minHeight: "85vh" }}
+    >
       <div
         className="card shadow-lg border-0"
         style={{ width: "100%", maxWidth: "420px", borderRadius: "12px" }}
