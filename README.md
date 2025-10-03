@@ -7,7 +7,7 @@ Permite gestionar clientes, empleados, productos y registrar ventas con sus resp
 ## Integrantes
 - Juan Pablo Avila Quitian - 2214107
 - Sergio Nelson Alberto Gomez Gil - 2214106
-- Jean Carlo Rodriguez Pico - 
+- Jean Carlo Rodriguez Pico - 2214116
 ---
 ## Características principales
 - 📍 **Sucursales**: administración de varias sedes de venta.
