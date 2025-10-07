@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesión — Gestión de Ventas</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-2: #1e293b;
+      --text: #f1f5f9;
+      --radius: 14px;
+      --shadow: 0 4px 25px rgba(0,0,0,0.2);
+    }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: radial-gradient(circle at 30% 20%, #7c5cff33, #00e0ff22), var(--bg);
+      font-family: sans-serif;
+    }
+    .login-card {
+      background: var(--bg-2);
+      padding: 2rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 380px;
+      color: var(--text);
+    }
+    .login-card h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .login-card label {
+      display: block;
+      margin-top: .5rem;
+    }
+    .login-card input {
+      width: 100%;
+      padding: .8rem;
+      margin: .5rem 0 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.15);
+      background: transparent;
+      color: var(--text);
+    }
+    .login-card button {
+      width: 100%;
+      margin-top: .5rem;
+      padding: .8rem;
+      border: none;
+      border-radius: 12px;
+      background-color: #3b82f6;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .login-card button:hover {
+      background-color: #2563eb;
+    }
+    #loginMsg {
+      display: none;
+      margin-top: 1rem;
+      text-align: center;
+      color: #ff5c5c;
+    }
+  </style>
+</head>
+<body>
+  <form class="login-card" id="loginForm" novalidate>
+    <h2>Iniciar sesión</h2>
+
+    <label for="user">Usuario</label>
+    <input type="text" id="user" name="user" required placeholder="Nombre de usuario">
+
+    <label for="pass">Contraseña</label>
+    <input type="password" id="pass" name="pass" required placeholder="••••••">
+
+    <button type="submit">Entrar</button>
+    <p id="loginMsg"></p>
+  </form>
+
+  <script src="login.js"></script>
+</body>
+</html>
+
