@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesión — Gestión de Ventas</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: radial-gradient(circle at 30% 20%, #7c5cff33, #00e0ff22), var(--bg);
+    }
+    .login-card {
+      background: var(--bg-2);
+      padding: 2rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 380px;
+      color: var(--text);
+    }
+    .login-card h2 { text-align: center; margin-bottom: 1rem; }
+    .login-card input {
+      width: 100%;
+      padding: .8rem;
+      margin: .5rem 0 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.15);
+      background: transparent;
+      color: var(--text);
+    }
+    .login-card button {
+      width: 100%;
+      margin-top: .5rem;
+    }
+  </style>
+</head>
+<body>
+  <form class="login-card" id="loginForm">
+    <h2>Iniciar sesión</h2>
+    <label>Usuario</label>
+    <input type="text" name="user" required placeholder="admin">
+    <label>Contraseña</label>
+    <input type="password" name="pass" required placeholder="••••••">
+    <button type="submit" class="btn">Entrar</button>
+    <p id="loginMsg" class="tag" style="display:none;margin-top:1rem;text-align:center"></p>
+  </form>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const msg = document.getElementById('loginMsg');
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const user = form.user.value.trim();
+      const pass = form.pass.value.trim();
+
+      // Validación sencilla (solo ejemplo)
+      if (user === 'admin' && pass === '1234') {
+        localStorage.setItem('loggedIn', 'true');
+        window.location.href = 'index.html';
+      } else {
+        msg.textContent = 'Credenciales incorrectas';
+        msg.style.display = 'inline-block';
+      }
+    });
+
+    // Si ya está logueado, saltar al index
+    if (localStorage.getItem('loggedIn') === 'true') {
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>
