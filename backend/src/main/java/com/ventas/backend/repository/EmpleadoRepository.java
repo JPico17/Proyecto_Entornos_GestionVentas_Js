@@ -8,5 +8,5 @@ import com.ventas.backend.model.Empleado;
 
 @Repository
 public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
-    Optional<Empleado> findByNombreAndContraseña(String nombre, String contraseña);
+    Optional<Empleado> findByNombreAndPassword(String nombre, String password);
 }
