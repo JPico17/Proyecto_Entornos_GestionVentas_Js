@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión de Productos</title>
+  <link rel="stylesheet" href="estilos.css" />
+</head>
+<body>
+
+  <header>
+    <h1>Panel de Productos</h1>
+    <button id="logoutBtn">Cerrar sesión</button>
+  </header>
+
+  <section id="kpi">
+    <div id="kpiVentas"></div>
+  </section>
+
+  <main>
+    <h2>Lista de productos</h2>
+
+    <div id="productosLoader" style="display:none;">Cargando...</div>
+    <table id="productosTable" class="table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="productosBody"></tbody>
+    </table>
+
+    <h3>Agregar producto</h3>
+    <form id="newProductForm">
+      <input name="nombre" placeholder="Nombre" required />
+      <input name="precio" type="number" step="1" placeholder="Precio" required />
+      <input name="stock"  type="number" step="1" placeholder="Stock" required />
+      <button type="submit">Crear</button>
+      <span id="newProductMsg" style="display:none;"></span>
+    </form>
+  </main>
+
+  <script src="productos.js"></script>
+</body>
+</html>
