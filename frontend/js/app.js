@@ -145,6 +145,7 @@
         </form>
       </section>`;
 
+    const role = (localStorage.getItem("role") || "").toUpperCase();
     const sucursalId = parseInt(localStorage.getItem("sucursalId"));
     const empleadoId = parseInt(localStorage.getItem("empleadoId"));
     const productoSelect = qs("#ventaProducto");
@@ -154,7 +155,7 @@
     const infoStock = qs("#infoStock");
     const ventaForm = qs("#ventaForm");
 
-    if (!empleadoId || !sucursalId) {
+    if (!empleadoId || (role !== "ADMIN" && !sucursalId)) {
       alert("⚠️ No se pudo obtener el empleado o la sucursal. Inicia sesión nuevamente.");
       window.location.href = "login.html";
       return;

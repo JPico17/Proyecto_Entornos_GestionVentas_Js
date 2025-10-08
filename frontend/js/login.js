@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const user = await res.json();
       console.log("🔹 Login exitoso:", user);
 
-      if (!user.id || !user.sucursalId) {
+      if ((user.sucursalId === null || user.sucursalId === undefined) && user.role.toUpperCase() !== "ADMIN") {
         alert("⚠️ El empleado no tiene sucursal asignada en la base de datos.");
         return;
       }

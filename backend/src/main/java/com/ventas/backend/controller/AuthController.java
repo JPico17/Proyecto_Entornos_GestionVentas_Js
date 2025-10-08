@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -19,8 +20,9 @@ public class AuthController {
     @Autowired
     private EmpleadoRepository empleadoRepository;
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+@PostMapping("/login")
+public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    try {
         Optional<Empleado> empleadoOpt = empleadoRepository.findByEmailAndPassword(
                 request.getEmail(),
                 request.getPassword()
@@ -34,17 +36,28 @@ public class AuthController {
         Empleado empleado = empleadoOpt.get();
 
         // Asegurar que la sucursal se cargue correctamente
-        Long sucursalId = empleado.getSucursal() != null ? empleado.getSucursal().getId() : null;
+        // Long sucursalId = empleado.getSucursal() != null ? empleado.getSucursal().getId() : null;
+        Long sucursalId = null;
+        if (empleado.getSucursal() != null) {
+            sucursalId = empleado.getSucursal().getId();
+        }
 
-        return ResponseEntity.ok(Map.of(
-                "id", empleado.getId(),
-                "nombre", empleado.getNombre(),
-                "email", empleado.getEmail(),
-                "role", empleado.getRole().toString(),
-                "sucursalId", sucursalId,
-                "mensaje", "✅ Login exitoso"
-        ));
+        // Armamos el JSON sin usar Map.of() (acepta nulls)
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", empleado.getId());
+            response.put("nombre", empleado.getNombre());
+            response.put("email", empleado.getEmail());
+            response.put("role", empleado.getRole() != null ? empleado.getRole().toString() : "EMPLOYEE");
+            response.put("sucursalId", sucursalId);
+            response.put("mensaje", "✅ Login exitoso");
+
+            return ResponseEntity.ok(response);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("mensaje", "Error interno: " + e.getMessage()));
     }
+}
 }
 
 
