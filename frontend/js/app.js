@@ -84,7 +84,12 @@
           <div class="card"><h3>Ventas Hoy</h3><p id="ventasHoy">...</p></div>
         </div>
       </section>`;
+    // Aseguramos refresco de KPIs cada vez que se renderiza el dashboard
     cargarKPIs();
+    // También forzamos un nuevo cálculo un poco después para evitar condiciones de carrera en navegadores
+    setTimeout(() => {
+      try { cargarKPIs(); } catch (e) { console.debug('Error segundo refresh KPIs', e); }
+    }, 200);
   }
 
   function renderEmpleados() {
@@ -209,9 +214,27 @@
         });
 
         if (resp.ok) {
+          // Leemos la venta creada desde la respuesta para actualizar KPIs inmediatamente
+          const nuevaVenta = await resp.json();
           alert("✅ Venta registrada con éxito.");
           qs("#ventaForm").reset();
           infoBox.style.display = "none";
+          try {
+            // Actualizamos el KPI localmente sumando el total devuelto por la API
+            const currentText = qs('#ventasHoy') ? qs('#ventasHoy').textContent : '$0';
+            const currentNum = Number((currentText || '').replace(/[^0-9.-]+/g, '')) || 0;
+            const added = nuevaVenta?.total != null ? Number(nuevaVenta.total) : 0;
+            const newTotal = currentNum + added;
+            if (qs('#ventasHoy')) qs('#ventasHoy').textContent = '$' + formatMoney(newTotal || 0);
+
+            // Refrescar indicadores y tabla de productos (fallback y consistencia)
+            await cargarKPIs();
+            await cargarProductos();
+            // Re-renderizar el formulario para reconstruir el select y la info del producto
+            renderVentas();
+          } catch (e) {
+            console.error('Error al refrescar UI tras venta:', e);
+          }
         } else {
           const err = await resp.text();
           console.error(err);
@@ -225,23 +248,76 @@
   }
 
   // ====== CARGAS ======
-  async function cargarKPIs() {
+// ====== CARGAS ======
+async function cargarKPIs() {
+  try {
+    // Pedimos empleados y productos en paralelo.
+    const [eRes, pRes] = await Promise.all([
+      fetch("http://localhost:9090/api/empleados"),
+      fetch("http://localhost:9090/api/productos")
+    ]);
+
+    const e = await eRes.json();
+    const p = await pRes.json();
+
+    qs("#totalEmpleados").textContent = Array.isArray(e) ? e.length : (e?.length || 0);
+    qs("#totalProductos").textContent = Array.isArray(p) ? p.length : (p?.length || 0);
+
+    // Intentamos primero obtener el total del día desde /api/ventas/hoy (más eficiente).
+    let totalHoy = 0;
     try {
-      const [eRes, pRes] = await Promise.all([
-        fetch("http://localhost:9090/api/empleados"),
-        fetch("http://localhost:9090/api/productos")
-      ]);
-      const e = await eRes.json();
-      const p = await pRes.json();
-      qs("#totalEmpleados").textContent = e.length;
-      qs("#totalProductos").textContent = p.length;
-      qs("#ventasHoy").textContent = "$" + formatMoney(3250000);
-    } catch {
-      qs("#totalEmpleados").textContent = "—";
-      qs("#totalProductos").textContent = "—";
-      qs("#ventasHoy").textContent = "$0";
+      // Forzamos no-cache y registramos la respuesta para depuración
+      const hoyUrl = "http://localhost:9090/api/ventas/hoy?t=" + Date.now();
+      console.debug('Solicitando total hoy a', hoyUrl);
+      const hoyRes = await fetch(hoyUrl, { cache: 'no-store', headers: { Accept: 'application/json' } });
+      console.debug('Respuesta /api/ventas/hoy ->', hoyRes.status);
+      if (hoyRes.ok) {
+        const num = await hoyRes.json();
+        console.debug('/api/ventas/hoy payload:', num);
+        totalHoy = Number(num) || 0;
+      } else if (hoyRes.status === 404) {
+        // caemos a descargar lista si el endpoint no existe
+        throw new Error('No existe endpoint /hoy');
+      } else {
+        throw new Error('Error al obtener total de hoy');
+      }
+    } catch (e) {
+      // Falló obtener el total directo: descargamos la lista de ventas y calculamos
+      try {
+        const vUrl = "http://localhost:9090/api/ventas?t=" + Date.now();
+        console.debug('Solicitando lista de ventas a', vUrl);
+        const vRes = await fetch(vUrl, { cache: 'no-store', headers: { Accept: 'application/json' } });
+        console.debug('/api/ventas status ->', vRes.status);
+        if (vRes.ok) {
+          const ventas = await vRes.json();
+          if (Array.isArray(ventas)) {
+            const today = new Date().toDateString();
+            totalHoy = ventas.reduce((acc, venta) => {
+              const fecha = venta?.fecha ? new Date(venta.fecha) : null;
+              const isToday = fecha ? (fecha.toDateString() === today) : true;
+              const t = venta?.total != null ? parseFloat(venta.total) : 0;
+              return acc + (isToday ? t : 0);
+            }, 0);
+          } else if (typeof ventas === 'number' || (!isNaN(parseFloat(ventas)) && isFinite(ventas))) {
+            totalHoy = Number(ventas) || 0;
+          }
+        }
+      } catch (err) {
+        console.error('Error al obtener lista de ventas como fallback:', err);
+      }
     }
+
+  qs("#ventasHoy").textContent = "$" + formatMoney(totalHoy || 0);
+  // Registro de depuración: valor final y contenido del DOM
+  console.debug('KPIs actualizados: ventasHoy=', qs('#ventasHoy') ? qs('#ventasHoy').textContent : null, 'innerHTML=', qs('#ventasHoy') ? qs('#ventasHoy').innerHTML : null);
+  } catch (error) {
+    console.error("Error al cargar KPIs:", error);
+    qs("#totalEmpleados").textContent = "—";
+    qs("#totalProductos").textContent = "—";
+    qs("#ventasHoy").textContent = "$0";
   }
+}
+
 
   async function cargarEmpleados() {
     const res = await fetch("http://localhost:9090/api/empleados");
