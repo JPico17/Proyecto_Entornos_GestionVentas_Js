@@ -74,7 +74,7 @@
   }
 
   // ====== VISTAS ======
-  function renderAdminDashboard() {
+  async function renderAdminDashboard() {
     content.innerHTML = `
       <section>
         <h2>📊 Panel de Administración</h2>
@@ -83,6 +83,29 @@
           <div class="card"><h3>Total Productos</h3><p id="totalProductos">...</p></div>
           <div class="card"><h3>Ventas Hoy</h3><p id="ventasHoy">...</p></div>
         </div>
+        <div class="dashboard-grid">
+          <aside class="card filters-col">
+            <h3>Filtros</h3>
+            <div class="filters">
+              <label>Sucursal: <select id="fSucursal"><option value="">Todas</option></select></label>
+              <label>Empleado: <select id="fEmpleado"><option value="">Todos</option></select></label>
+              <label>Cliente: <select id="fCliente"><option value="">Todos</option></select></label>
+              <label>Desde: <input type="date" id="fDesde" /></label>
+              <label>Hasta: <input type="date" id="fHasta" /></label>
+              <div class="filter-actions"><button id="fAplicar" class="btn">Aplicar filtros</button> <button id="fReset" class="btn ghost">Reset</button></div>
+            </div>
+          </aside>
+          <main class="charts-col">
+            <div class="chart-row">
+              <div class="card"><h3>Ventas (serie temporal)</h3><canvas id="chartVentas" height="180"></canvas></div>
+              <div class="card"><h3>Top Empleados</h3><canvas id="chartEmpleados" height="180"></canvas></div>
+            </div>
+            <div class="chart-row">
+              <div class="card"><h3>Top Clientes</h3><canvas id="chartClientes" height="180"></canvas></div>
+              <div class="card"><h3>Ventas por Sucursal</h3><canvas id="chartSucursales" height="180"></canvas></div>
+            </div>
+          </main>
+        </div>
       </section>`;
     // Aseguramos refresco de KPIs cada vez que se renderiza el dashboard
     cargarKPIs();
@@ -90,6 +113,205 @@
     setTimeout(() => {
       try { cargarKPIs(); } catch (e) { console.debug('Error segundo refresh KPIs', e); }
     }, 200);
+
+    // Inicializar filtros y gráficos
+    await cargarFiltrosYVentas();
+  }
+
+  // ====== DASHBOARD: filtros y gráficas ======
+  let ventasCache = [];
+  let chartVentas, chartEmpleados, chartClientes, chartSucursales;
+
+  async function cargarFiltrosYVentas() {
+    try {
+      const [sRes, eRes, cRes, vRes] = await Promise.all([
+        fetch('http://localhost:9090/api/sucursales'),
+        fetch('http://localhost:9090/api/empleados'),
+        fetch('http://localhost:9090/api/clientes'),
+        fetch('http://localhost:9090/api/ventas')
+      ]);
+
+  const sucursales = await sRes.json();
+  const empleados = await eRes.json();
+  const clientes = await cRes.json();
+  const ventas = await vRes.json();
+
+      ventasCache = Array.isArray(ventas) ? ventas : [];
+
+      const fSuc = qs('#fSucursal');
+      const fEmp = qs('#fEmpleado');
+      const fCli = qs('#fCliente');
+
+      // Llenar selects
+      fSuc.innerHTML = '<option value="">Todas</option>' + sucursales.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
+      fEmp.innerHTML = '<option value="">Todos</option>' + empleados.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
+      fCli.innerHTML = '<option value="">Todos</option>' + clientes.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+
+      qs('#fAplicar').addEventListener('click', () => {
+        const filtro = { sucursalId: qs('#fSucursal').value || null, empleadoId: qs('#fEmpleado').value || null, clienteId: qs('#fCliente').value || null, desde: qs('#fDesde').value || null, hasta: qs('#fHasta').value || null };
+        renderChartsFiltro(filtro);
+      });
+      qs('#fReset').addEventListener('click', () => {
+        qs('#fSucursal').value = '';
+        qs('#fEmpleado').value = '';
+        qs('#fCliente').value = '';
+        qs('#fDesde').value = '';
+        qs('#fHasta').value = '';
+        qs('#fTopN').value = '10';
+        renderChartsFiltro({});
+      });
+
+      // Render inicial (sin filtros)
+      renderChartsFiltro({});
+    } catch (err) {
+      console.error('Error cargando datos para dashboard:', err);
+    }
+  }
+
+  function filtrarVentas(ventas, filtro) {
+    return ventas.filter(v => {
+      if (filtro.sucursalId && String(v.sucursal?.id) !== String(filtro.sucursalId)) return false;
+      if (filtro.empleadoId && String(v.empleado?.id) !== String(filtro.empleadoId)) return false;
+      if (filtro.clienteId && String(v.cliente?.id) !== String(filtro.clienteId)) return false;
+      if (filtro.desde) {
+        const desde = new Date(filtro.desde);
+        const fecha = v.fecha ? new Date(v.fecha) : null;
+        if (!fecha || fecha < desde) return false;
+      }
+      if (filtro.hasta) {
+        const hasta = new Date(filtro.hasta);
+        const fecha = v.fecha ? new Date(v.fecha) : null;
+        if (!fecha || fecha > hasta) return false;
+      }
+      return true;
+    });
+  }
+
+  function sumByKey(arr, keyFn) {
+    return arr.reduce((acc, item) => {
+      const k = keyFn(item);
+      acc[k] = (acc[k] || 0) + (Number(item.total) || 0);
+      return acc;
+    }, {});
+  }
+
+  function toSortedArray(obj, topN = 10) {
+    return Object.entries(obj).map(([k,v]) => ({key:k, value:v})).sort((a,b)=>b.value-a.value).slice(0, topN);
+  }
+
+  function renderChartsFiltro(filtro) {
+    const data = filtrarVentas(ventasCache, filtro);
+
+    // Serie temporal (ventas por fecha)
+    const ventasPorDia = data.reduce((acc, v) => {
+      const d = v.fecha ? new Date(v.fecha).toISOString().slice(0,10) : 'sin_fecha';
+      acc[d] = (acc[d] || 0) + (Number(v.total) || 0);
+      return acc;
+    }, {});
+    const labels = Object.keys(ventasPorDia).sort();
+    const values = labels.map(l => ventasPorDia[l]);
+
+    // Top empleados
+    const byEmp = sumByKey(data, v => v.empleado?.nombre || 'Desconocido');
+    const topEmp = toSortedArray(byEmp);
+
+    // Top clientes
+    const byCli = sumByKey(data, v => v.cliente?.nombre || 'Desconocido');
+    const topCli = toSortedArray(byCli);
+
+    // Por sucursal
+    const bySuc = sumByKey(data, v => v.sucursal?.nombre || 'Desconocido');
+    const topSuc = toSortedArray(bySuc);
+
+    // Crear/actualizar charts con mejor UX: tooltips, formateo, animaciones
+  const topN = 10; // fijo: mostramos top 10 por defecto
+    const labelsVentas = labels.map(l => new Date(l).toLocaleDateString());
+    if (!chartVentas) {
+      chartVentas = new Chart(qs('#chartVentas').getContext('2d'), {
+        type: 'line',
+        data: { labels: labelsVentas, datasets: [{ label: 'Ventas', data: values, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.12)', tension: 0.3, pointRadius: 3 }]},
+        options: {
+          responsive: true,
+          plugins: { legend: { display: true }, tooltip: { callbacks: { label: ctx => '$' + formatMoney(ctx.parsed.y) } } },
+          scales: { y: { ticks: { callback: v => '$' + formatMoney(v) } } }
+        }
+      });
+    } else {
+      chartVentas.data.labels = labelsVentas; chartVentas.data.datasets[0].data = values; chartVentas.update();
+    }
+
+    const topEmpN = toSortedArray(byEmp, topN);
+    if (!chartEmpleados) {
+      chartEmpleados = new Chart(qs('#chartEmpleados').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: topEmpN.map(x => x.key),
+          datasets: [{ label: 'Ventas', data: topEmpN.map(x => x.value), backgroundColor: '#10b981' }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: ctx => '$' + formatMoney(ctx.parsed.x ?? ctx.parsed.y)
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { callback: v => '$' + formatMoney(v) } }
+          }
+        }
+      });
+    } else {
+      chartEmpleados.data.labels = topEmpN.map(x => x.key);
+      chartEmpleados.data.datasets[0].data = topEmpN.map(x => x.value);
+      chartEmpleados.update();
+    }
+
+    const topCliN = toSortedArray(byCli, topN);
+    if (!chartClientes) {
+      chartClientes = new Chart(qs('#chartClientes').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: topCliN.map(x => x.key),
+          datasets: [{ label: 'Ventas', data: topCliN.map(x => x.value), backgroundColor: '#f59e0b' }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          plugins: {
+            tooltip: { callbacks: { label: ctx => '$' + formatMoney(ctx.parsed.x ?? ctx.parsed.y) } }
+          },
+          scales: { x: { ticks: { callback: v => '$' + formatMoney(v) } } }
+        }
+      });
+    } else {
+      chartClientes.data.labels = topCliN.map(x => x.key);
+      chartClientes.data.datasets[0].data = topCliN.map(x => x.value);
+      chartClientes.update();
+    }
+
+    const topSucN = toSortedArray(bySuc, 10);
+    if (!chartSucursales) {
+      chartSucursales = new Chart(qs('#chartSucursales').getContext('2d'), {
+        type: 'pie',
+        data: {
+          labels: topSucN.map(x => x.key),
+          datasets: [{ label: 'Ventas', data: topSucN.map(x => x.value), backgroundColor: ['#ef4444', '#3b82f6', '#f59e0b', '#10b981', '#8b5cf6'] }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            tooltip: { callbacks: { label: ctx => ctx.label + ': $' + formatMoney(ctx.parsed) } }
+          }
+        }
+      });
+    } else {
+      chartSucursales.data.labels = topSucN.map(x => x.key);
+      chartSucursales.data.datasets[0].data = topSucN.map(x => x.value);
+      chartSucursales.update();
+    }
   }
 
   function renderEmpleados() {

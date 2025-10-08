@@ -18,7 +18,7 @@
 * { box-sizing: border-box; }
 html,body { height:100%; margin:0; font-family:Inter,system-ui,Arial; background:var(--bg); color:var(--fg); }
 
-.container { max-width:1100px; margin:20px auto; padding:0 16px; }
+.container { max-width:1600px; margin:12px auto; padding:0 24px; }
 .nav-inner { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; }
 .brand { font-weight:700; text-decoration:none; color:var(--fg); }
 .tag { background:var(--accent); color:white; padding:2px 6px; border-radius:6px; margin-right:8px; font-size:12px; }
@@ -29,7 +29,7 @@ html,body { height:100%; margin:0; font-family:Inter,system-ui,Arial; background
 .user { font-size:14px; color:var(--muted); margin-left:12px; }
 
 .auth { display:flex; justify-content:center; align-items:center; height:75vh; }
-.card { background:var(--card); padding:16px; border-radius:8px; box-shadow:0 1px 6px rgba(0,0,0,0.04); width:100%; max-width:420px; }
+.card { background:var(--card); padding:18px; border-radius:10px; box-shadow:0 1px 8px rgba(0,0,0,0.06); width:100%; }
 .field { display:block; margin-bottom:12px; }
 .field span { display:block; margin-bottom:6px; color:var(--muted); font-size:13px; }
 input { width:100%; padding:10px; border-radius:6px; border:1px solid #e6e9ee; }
@@ -50,4 +50,57 @@ input { width:100%; padding:10px; border-radius:6px; border:1px solid #e6e9ee; }
   padding: 10px;
   border-radius: 8px;
   margin: 10px 0;
+}
+
+/* ===== Dashboard / Charts styling ===== */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  margin-top: 12px;
+}
+.filters label { display:flex; flex-direction:column; font-size:13px; color:var(--muted); }
+.filters select, .filters input[type="date"], .filters input[type="number"] {
+  padding:8px 10px; border-radius:8px; border:1px solid #e6e9ee; background:transparent; color:var(--fg);
+  min-width:160px;
+}
+.filters .btn { padding:8px 12px; }
+
+.charts { margin-top:16px; }
+.chart-row { display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-bottom:12px; }
+.chart-row .card { padding:16px; min-height:360px; display:flex; flex-direction:column; }
+.card h3 { font-size:16px; margin:0 0 10px 0; }
+canvas { width:100% !important; height:420px !important; display:block; }
+
+/* KPI styling tweaks */
+.grid .card p { font-size:20px; font-weight:700; margin:6px 0 0 0; }
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .cols-3 { grid-template-columns: 1fr; }
+  .chart-row { grid-template-columns: 1fr; }
+  .filters label { min-width:120px; }
+}
+
+/* New dashboard layout */
+.dashboard-grid { display:grid; grid-template-columns: 320px 1fr; gap:18px; margin-top:12px; }
+.filters-col { padding:12px; }
+.filters { display:flex; flex-direction:column; gap:10px; }
+.filters label { display:flex; flex-direction:column; }
+.filter-actions { display:flex; gap:8px; margin-top:8px; }
+
+/* Make filters column sticky so charts can use available height */
+.filters-col .card { position:sticky; top:18px; max-height:calc(100vh - 48px); overflow:auto; }
+
+@media (max-width: 1000px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .filters-col { order: 1; }
+  .charts-col { order: 2; }
+}
+
+@media (max-width: 480px) {
+  .filters { gap:8px; }
+  .filters select, .filters input[type="date"], .filters input[type="number"] { min-width:100px; }
 }
