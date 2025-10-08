@@ -21,7 +21,10 @@ public class ProductoController {
     }
 
     @GetMapping
-    public List<Producto> listar() {
+    public List<Producto> listar(@RequestParam(name = "sucursalId", required = false) Long sucursalId) {
+        if (sucursalId != null) {
+            return productoRepository.findBySucursalId(sucursalId);
+        }
         return productoRepository.findAll();
     }
 

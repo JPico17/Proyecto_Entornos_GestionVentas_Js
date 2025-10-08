@@ -1,6 +1,7 @@
 package com.ventas.backend.controller;
 
 import com.ventas.backend.dto.EmpleadoDTO;
+import com.ventas.backend.dto.EmpleadoWithSucursalDTO;
 import com.ventas.backend.model.Empleado;
 import com.ventas.backend.model.Role;
 import com.ventas.backend.model.Sucursal;
@@ -23,8 +24,21 @@ public class EmpleadoController {
     }
 
     @GetMapping
-    public List<Empleado> listar() {
-        return empleadoRepository.findAll();
+    public List<EmpleadoWithSucursalDTO> listar() {
+        List<Empleado> list = empleadoRepository.findAll();
+        return list.stream().map(e -> {
+            EmpleadoWithSucursalDTO dto = new EmpleadoWithSucursalDTO();
+            dto.setId(e.getId());
+            dto.setNombre(e.getNombre());
+            dto.setCargo(e.getCargo());
+            dto.setEmail(e.getEmail());
+            dto.setRole(e.getRole() != null ? e.getRole().name() : null);
+            if (e.getSucursal() != null) {
+                dto.setSucursalId(e.getSucursal().getId());
+                dto.setSucursalNombre(e.getSucursal().getNombre());
+            }
+            return dto;
+        }).toList();
     }
 
     @PostMapping

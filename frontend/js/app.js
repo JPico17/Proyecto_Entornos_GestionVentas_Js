@@ -319,7 +319,7 @@
       <section>
         <h2>👥 Empleados</h2>
         <table class="table">
-          <thead><tr><th>ID</th><th>Nombre</th><th>Cargo</th></tr></thead>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Cargo</th><th>Sucursal</th></tr></thead>
           <tbody id="empleadosBody"></tbody>
         </table>
       </section>`;
@@ -327,15 +327,31 @@
   }
 
   function renderProductos() {
+    // Mostrar UI de productos solo para ADMIN; empleados deben ver la vista de inventario simple
+    if (role !== 'ADMIN') {
+      renderEmployeeHome();
+      return;
+    }
+
     content.innerHTML = `
       <section>
         <h2>📦 Productos</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div></div>
+          <div><button id="btnAgregarProducto" class="btn">Agregar producto</button></div>
+        </div>
+        <div id="productoFormContainer" style="display:none;margin-bottom:12px;"></div>
         <table class="table">
-          <thead><tr><th>ID</th><th>Producto</th><th>Precio</th><th>Stock</th></tr></thead>
+          <thead><tr><th>ID</th><th>Producto</th><th>Precio</th><th>Stock</th><th>Sucursal</th><th>Acciones</th></tr></thead>
           <tbody id="productosBody"></tbody>
         </table>
       </section>`;
     cargarProductos();
+
+    // Agregar producto (abre form)
+    qs('#btnAgregarProducto').addEventListener('click', () => {
+      showProductoForm();
+    });
   }
 
   function renderEmployeeHome() {
@@ -357,6 +373,20 @@
       <section>
         <h2>💳 Registrar Venta</h2>
         <form id="ventaForm" class="card">
+          <label class="field"><span>Cliente</span>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="ventaCliente" required style="flex:1;"><option value="">-- Selecciona cliente --</option></select>
+              <button id="btnNuevoCliente" type="button" class="btn ghost">Nuevo cliente</button>
+            </div>
+          </label>
+          <div id="nuevoClienteForm" style="display:none; margin-bottom:10px;">
+            <div class="card quick-client" style="padding:12px;">
+              <div class="row"><label style="flex:1"><span>Nombre</span><input id="ncNombre" type="text" /></label></div>
+              <div class="row"><label style="flex:1"><span>Email</span><input id="ncEmail" type="email" /></label><label style="flex:1"><span>Teléfono</span><input id="ncTelefono" type="tel" /></label></div>
+              <div class="help" id="ncHelp">El nombre es obligatorio.</div>
+              <div class="actions"><button id="ncCrear" type="button" class="btn" disabled>Crear cliente</button> <button id="ncCancelar" type="button" class="btn ghost">Cancelar</button></div>
+            </div>
+          </div>
           <label class="field"><span>Producto</span>
             <select id="ventaProducto" required><option value="">-- Selecciona --</option></select>
           </label>
@@ -389,10 +419,97 @@
     }
 
     try {
-      const res = await fetch("http://localhost:9090/api/productos");
-      const data = await res.json();
+      const [prodRes, cliRes] = await Promise.all([
+        fetch("http://localhost:9090/api/productos"),
+        fetch("http://localhost:9090/api/clientes")
+      ]);
 
-      const productosSucursal = data.filter(p => !p.sucursal || p.sucursal.id === sucursalId);
+      const productos = await prodRes.json();
+      const clientes = await cliRes.json();
+
+      // Pedimos productos ya filtrados desde el backend cuando no somos admin
+      const roleLocal = (localStorage.getItem("role") || "EMPLOYEE").toUpperCase();
+      let productosSucursal = [];
+      if (roleLocal === 'ADMIN') {
+        productosSucursal = Array.isArray(productos) ? productos : [];
+      } else {
+        // pedimos al backend solo los de la sucursal del empleado
+        try {
+          const url = `http://localhost:9090/api/productos?sucursalId=${sucursalId}`;
+          const pRes = await fetch(url);
+          productosSucursal = await pRes.json();
+        } catch (err) {
+          // fallback: filtrar localmente
+          productosSucursal = Array.isArray(productos) ? productos.filter(p => !p.sucursal || p.sucursal.id === sucursalId) : [];
+        }
+      }
+
+      // poblar select de clientes
+      const clienteSelect = qs('#ventaCliente');
+      if (Array.isArray(clientes)) {
+        clientes.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = c.nombre;
+          clienteSelect.appendChild(opt);
+        });
+      }
+
+      // Nuevo cliente: toggle y lógica (mejorada)
+      qs('#btnNuevoCliente').addEventListener('click', () => {
+        const f = qs('#nuevoClienteForm');
+        f.style.display = (f.style.display === 'none' || f.style.display === '') ? 'block' : 'none';
+      });
+      const ncNombreEl = qs('#ncNombre');
+      const ncEmailEl = qs('#ncEmail');
+      const ncTelefonoEl = qs('#ncTelefono');
+      const ncCrearBtn = qs('#ncCrear');
+      const ncCancelarBtn = qs('#ncCancelar');
+      const ncHelp = qs('#ncHelp');
+
+      // Live validation: habilitar botón Crear solo si hay nombre
+      function refreshNcState() {
+        const name = ncNombreEl.value ? ncNombreEl.value.trim() : '';
+        if (name.length > 0) {
+          ncCrearBtn.disabled = false;
+          ncHelp.style.display = 'none';
+        } else {
+          ncCrearBtn.disabled = true;
+          ncHelp.style.display = 'block';
+        }
+      }
+      ncNombreEl.addEventListener('input', refreshNcState);
+      refreshNcState();
+
+      ncCancelarBtn.addEventListener('click', () => { qs('#nuevoClienteForm').style.display = 'none'; });
+      ncCrearBtn.addEventListener('click', async () => {
+        const nombreNc = ncNombreEl.value && ncNombreEl.value.trim();
+        const email = ncEmailEl.value && ncEmailEl.value.trim();
+        const telefono = ncTelefonoEl.value && ncTelefonoEl.value.trim();
+        if (!nombreNc) { ncHelp.style.display = 'block'; return; }
+        try {
+          const payload = { nombre: nombreNc };
+          if (email) payload.email = email;
+          if (telefono) payload.telefono = telefono;
+          const res = await fetch('http://localhost:9090/api/clientes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          if (res.ok || res.status === 201) {
+            const nuevo = await res.json();
+            // agregar al select y seleccionarlo
+            const o = document.createElement('option'); o.value = nuevo.id; o.textContent = nuevo.nombre; clienteSelect.appendChild(o);
+            clienteSelect.value = nuevo.id;
+            qs('#nuevoClienteForm').style.display = 'none';
+            ncNombreEl.value = '';
+            ncEmailEl.value = '';
+            ncTelefonoEl.value = '';
+            refreshNcState();
+            // Mostrar confirmación inline simple
+            ncHelp.textContent = 'Cliente creado y seleccionado.'; ncHelp.style.color = 'green'; ncHelp.style.display = 'block';
+            setTimeout(() => { ncHelp.style.display = 'none'; ncHelp.style.color = '#b91c1c'; ncHelp.textContent = 'El nombre es obligatorio.'; }, 2000);
+          } else {
+            const txt = await res.text(); console.error('Error creando cliente', txt); alert('Error creando cliente');
+          }
+        } catch (err) { console.error(err); alert('Error creando cliente'); }
+      });
 
       productosSucursal.forEach(p => {
         const option = document.createElement("option");
@@ -414,8 +531,14 @@
       ventaForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const productoId = parseInt(productoSelect.value);
+        const clienteId = parseInt(qs('#ventaCliente').value);
         const cantidad = parseInt(qs("#ventaCantidad").value);
         const producto = productosSucursal.find(p => p.id === productoId);
+
+        if (!clienteId) {
+          alert('Seleccione o cree un cliente antes de registrar la venta.');
+          return;
+        }
 
         if (!producto || cantidad > producto.stock) {
           alert("❌ Producto inválido o sin stock suficiente.");
@@ -423,7 +546,7 @@
         }
 
         const venta = {
-          clienteId: 1,
+          clienteId: clienteId || 1,
           empleadoId,
           sucursalId,
           items: [{ productoId, cantidad }]
@@ -545,16 +668,110 @@ async function cargarKPIs() {
     const res = await fetch("http://localhost:9090/api/empleados");
     const data = await res.json();
     const tbody = qs("#empleadosBody");
-    tbody.innerHTML = data.map(e => `<tr><td>${e.id}</td><td>${e.nombre}</td><td>${e.cargo}</td></tr>`).join("");
+    tbody.innerHTML = data.map(e => `<tr><td>${e.id}</td><td>${e.nombre}</td><td>${e.cargo}</td><td>${e.sucursalNombre || '-'}</td></tr>`).join("");
   }
 
   async function cargarProductos() {
     const res = await fetch("http://localhost:9090/api/productos");
     const data = await res.json();
     const tbody = qs("#productosBody");
-    tbody.innerHTML = data.map(p =>
-      `<tr><td>${p.id}</td><td>${p.nombre}</td><td>$${formatMoney(p.precio)}</td><td>${p.stock}</td></tr>`
-    ).join("");
+    const roleLocal = (localStorage.getItem("role") || "EMPLOYEE").toUpperCase();
+    const sucursalIdLocal = parseInt(localStorage.getItem("sucursalId"));
+
+    const productos = Array.isArray(data)
+      ? (roleLocal === 'ADMIN' ? data : data.filter(p => !p.sucursal || p.sucursal.id === sucursalIdLocal))
+      : [];
+    // Render rows según rol: ADMIN muestra sucursal y acciones; EMPLOYEE solo columnas básicas
+    if (roleLocal === 'ADMIN') {
+      tbody.innerHTML = productos.map(p =>
+        `<tr>
+           <td>${p.id}</td>
+           <td>${p.nombre}</td>
+           <td>$${formatMoney(p.precio)}</td>
+           <td>${p.stock}</td>
+           <td>${p.sucursal ? p.sucursal.nombre : '-'}</td>
+           <td><button class="btn" data-id="${p.id}" data-action="edit">Editar</button></td>
+         </tr>`
+      ).join("");
+
+      // Attach edit handlers solo para ADMIN
+      qsa('button[data-action="edit"]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          // fetch product details
+          try {
+            const pRes = await fetch(`http://localhost:9090/api/productos/${id}`);
+            if (pRes.ok) {
+              const prod = await pRes.json();
+              showProductoForm(prod);
+            } else alert('No se pudo obtener producto');
+          } catch (err) { console.error(err); alert('Error al obtener producto'); }
+        });
+      });
+    } else {
+      // Vistas para empleados: tabla simple con 4 columnas
+      tbody.innerHTML = productos.map(p =>
+        `<tr>
+           <td>${p.id}</td>
+           <td>${p.nombre}</td>
+           <td>$${formatMoney(p.precio)}</td>
+           <td>${p.stock}</td>
+         </tr>`
+      ).join("");
+    }
+  }
+
+  // muestra el formulario para crear/editar producto
+  async function showProductoForm(producto = null) {
+    const cont = qs('#productoFormContainer');
+    // cargar sucursales
+    let sucursales = [];
+    try {
+      const sRes = await fetch('http://localhost:9090/api/sucursales');
+      sucursales = await sRes.json();
+    } catch (e) { console.error('No se pudieron cargar sucursales', e); }
+
+    cont.style.display = 'block';
+    cont.innerHTML = `
+      <div class="card">
+        <h3>${producto ? 'Editar producto' : 'Agregar producto'}</h3>
+        <div class="grid">
+          <input type="hidden" id="prodId" value="${producto ? producto.id : ''}" />
+          <label class="field"><span>Nombre</span><input id="prodNombre" type="text" value="${producto ? producto.nombre : ''}" /></label>
+          <label class="field"><span>Precio</span><input id="prodPrecio" type="number" step="0.01" value="${producto ? producto.precio : ''}" /></label>
+          <label class="field"><span>Stock</span><input id="prodStock" type="number" value="${producto ? producto.stock : 0}" /></label>
+          <label class="field"><span>Sucursal</span>
+            <select id="prodSucursal"><option value="">-- Ninguna --</option>${sucursales.map(s=>`<option value="${s.id}" ${producto && producto.sucursal && producto.sucursal.id==s.id ? 'selected' : ''}>${s.nombre}</option>`).join('')}</select>
+          </label>
+          <div class="actions"><button id="prodSave" class="btn">Guardar</button> <button id="prodCancel" class="btn ghost">Cancelar</button></div>
+        </div>
+      </div>`;
+
+    qs('#prodCancel').addEventListener('click', () => { cont.style.display = 'none'; cont.innerHTML = ''; });
+    qs('#prodSave').addEventListener('click', async () => {
+      const id = qs('#prodId').value;
+      const nombre = qs('#prodNombre').value && qs('#prodNombre').value.trim();
+      const precio = parseFloat(qs('#prodPrecio').value) || 0;
+      const stock = parseInt(qs('#prodStock').value) || 0;
+      const sucId = qs('#prodSucursal').value ? parseInt(qs('#prodSucursal').value) : null;
+      if (!nombre) { alert('Nombre es requerido'); return; }
+      const payload = { nombre, precio, stock, sucursalId: sucId };
+      try {
+        let res;
+        if (id) {
+          res = await fetch(`http://localhost:9090/api/productos/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        } else {
+          res = await fetch('http://localhost:9090/api/productos', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        }
+        if (res.ok) {
+          cont.style.display = 'none'; cont.innerHTML = '';
+          await cargarProductos();
+          alert('Producto guardado');
+        } else {
+          const txt = await res.text(); console.error(txt); alert('Error guardando producto');
+        }
+      } catch (err) { console.error(err); alert('Error guardando producto'); }
+    });
   }
 
   // ====== INIT ======
