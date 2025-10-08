@@ -75,6 +75,8 @@
 
   // ====== VISTAS ======
   async function renderAdminDashboard() {
+    // Antes de re-renderizar, destruir gráficos antiguos para evitar canvases huérfanos
+    try { destroyCharts(); } catch (e) { console.debug('destroyCharts error', e); }
     content.innerHTML = `
       <section>
         <h2>📊 Panel de Administración</h2>
@@ -121,6 +123,15 @@
   // ====== DASHBOARD: filtros y gráficas ======
   let ventasCache = [];
   let chartVentas, chartEmpleados, chartClientes, chartSucursales;
+  
+  // Destruye instancias existentes de Chart.js (si las hay)
+  function destroyCharts() {
+    try { if (chartVentas) chartVentas.destroy(); } catch (e) { console.debug('destroy chartVentas', e); }
+    try { if (chartEmpleados) chartEmpleados.destroy(); } catch (e) { console.debug('destroy chartEmpleados', e); }
+    try { if (chartClientes) chartClientes.destroy(); } catch (e) { console.debug('destroy chartClientes', e); }
+    try { if (chartSucursales) chartSucursales.destroy(); } catch (e) { console.debug('destroy chartSucursales', e); }
+    chartVentas = chartEmpleados = chartClientes = chartSucursales = null;
+  }
 
   async function cargarFiltrosYVentas() {
     try {
@@ -315,15 +326,30 @@
   }
 
   function renderEmpleados() {
+    // Solo ADMIN puede crear/editar/eliminar empleados; si no es ADMIN devolvemos a dashboard o home
+    if (role !== 'ADMIN') {
+      routeDispatcher('dashboard');
+      return;
+    }
+
     content.innerHTML = `
       <section>
         <h2>👥 Empleados</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div></div>
+          <div><button id="btnAgregarEmpleado" class="btn">Agregar empleado</button></div>
+        </div>
+        <div id="empleadoFormContainer" style="display:none;margin-bottom:12px;"></div>
         <table class="table">
-          <thead><tr><th>ID</th><th>Nombre</th><th>Cargo</th><th>Sucursal</th></tr></thead>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Cargo</th><th>Email</th><th>Role</th><th>Sucursal</th><th>Acciones</th></tr></thead>
           <tbody id="empleadosBody"></tbody>
         </table>
       </section>`;
     cargarEmpleados();
+
+    qs('#btnAgregarEmpleado').addEventListener('click', () => {
+      showEmpleadoForm();
+    });
   }
 
   function renderProductos() {
@@ -668,7 +694,104 @@ async function cargarKPIs() {
     const res = await fetch("http://localhost:9090/api/empleados");
     const data = await res.json();
     const tbody = qs("#empleadosBody");
-    tbody.innerHTML = data.map(e => `<tr><td>${e.id}</td><td>${e.nombre}</td><td>${e.cargo}</td><td>${e.sucursalNombre || '-'}</td></tr>`).join("");
+    const roleLocal = (localStorage.getItem("role") || "EMPLOYEE").toUpperCase();
+
+    if (roleLocal === 'ADMIN') {
+      tbody.innerHTML = data.map(e => `<tr><td>${e.id}</td><td>${e.nombre}</td><td>${e.cargo}</td><td>${e.email || '-'}</td><td>${e.role || '-'}</td><td>${e.sucursalNombre || '-'}</td><td><button class="btn" data-id="${e.id}" data-action="edit">Editar</button> <button class="btn ghost" data-id="${e.id}" data-action="delete">Eliminar</button></td></tr>`).join("");
+
+      // attach handlers
+      qsa('button[data-action="edit"]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          try {
+            const res = await fetch(`http://localhost:9090/api/empleados/${id}`);
+            if (res.ok) {
+              const emp = await res.json();
+              showEmpleadoForm(emp);
+            } else alert('No se pudo obtener empleado');
+          } catch (err) { console.error(err); alert('Error al obtener empleado'); }
+        });
+      });
+
+      qsa('button[data-action="delete"]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          if (!confirm('¿Eliminar empleado? Esta acción no se puede deshacer.')) return;
+          try {
+            const del = await fetch(`http://localhost:9090/api/empleados/${id}`, { method: 'DELETE' });
+            if (del.ok || del.status === 204) {
+              await cargarEmpleados();
+              alert('Empleado eliminado');
+            } else {
+              const t = await del.text(); console.error(t); alert('Error eliminando empleado');
+            }
+          } catch (err) { console.error(err); alert('Error eliminando empleado'); }
+        });
+      });
+    } else {
+      tbody.innerHTML = data.map(e => `<tr><td>${e.id}</td><td>${e.nombre}</td><td>${e.cargo}</td><td>${e.sucursalNombre || '-'}</td></tr>`).join("");
+    }
+  }
+
+  // muestra formulario para crear/editar empleado
+  async function showEmpleadoForm(emp = null) {
+    const cont = qs('#empleadoFormContainer');
+    // cargar sucursales para select
+    let sucursales = [];
+    try {
+      const sRes = await fetch('http://localhost:9090/api/sucursales'); sucursales = await sRes.json();
+    } catch (e) { console.error('No se pudieron cargar sucursales', e); }
+
+    cont.style.display = 'block';
+    cont.innerHTML = `
+      <div class="card">
+        <h3>${emp ? 'Editar empleado' : 'Agregar empleado'}</h3>
+        <div class="grid">
+          <input type="hidden" id="empId" value="${emp ? emp.id : ''}" />
+          <label class="field"><span>Nombre</span><input id="empNombre" type="text" value="${emp ? emp.nombre : ''}" /></label>
+          <label class="field"><span>Cargo</span><input id="empCargo" type="text" value="${emp ? emp.cargo : ''}" /></label>
+          <label class="field"><span>Email</span><input id="empEmail" type="email" value="${emp ? emp.email : ''}" /></label>
+          <label class="field"><span>Password</span><input id="empPassword" type="password" value="" placeholder="Dejar en blanco para no cambiar" /></label>
+          <label class="field"><span>Role</span>
+            <select id="empRole">
+              <option value="ADMIN" ${emp && emp.role==='ADMIN' ? 'selected' : ''}>ADMIN</option>
+              <option value="EMPLOYEE" ${emp && emp.role==='EMPLOYEE' ? 'selected' : ''}>EMPLOYEE</option>
+            </select>
+          </label>
+          <label class="field"><span>Sucursal</span>
+            <select id="empSucursal"><option value="">-- Ninguna --</option>${sucursales.map(s=>`<option value="${s.id}" ${emp && emp.sucursalId==s.id ? 'selected' : ''}>${s.nombre}</option>`).join('')}</select>
+          </label>
+          <div class="actions"><button id="empSave" class="btn">Guardar</button> <button id="empCancel" class="btn ghost">Cancelar</button></div>
+        </div>
+      </div>`;
+
+    qs('#empCancel').addEventListener('click', () => { cont.style.display = 'none'; cont.innerHTML = ''; });
+    qs('#empSave').addEventListener('click', async () => {
+      const id = qs('#empId').value;
+      const nombre = qs('#empNombre').value && qs('#empNombre').value.trim();
+      const cargo = qs('#empCargo').value && qs('#empCargo').value.trim();
+      const email = qs('#empEmail').value && qs('#empEmail').value.trim();
+      const password = qs('#empPassword').value && qs('#empPassword').value.trim();
+      const roleVal = qs('#empRole').value;
+      const sucId = qs('#empSucursal').value ? parseInt(qs('#empSucursal').value) : null;
+      if (!nombre) { alert('Nombre es requerido'); return; }
+      const payload = { nombre, cargo, email, password: password || null, role: roleVal, sucursalId: sucId };
+      try {
+        let res;
+        if (id) {
+          res = await fetch(`http://localhost:9090/api/empleados/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        } else {
+          res = await fetch('http://localhost:9090/api/empleados', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        }
+        if (res.ok) {
+          cont.style.display = 'none'; cont.innerHTML = '';
+          await cargarEmpleados();
+          alert('Empleado guardado');
+        } else {
+          const txt = await res.text(); console.error(txt); alert('Error guardando empleado');
+        }
+      } catch (err) { console.error(err); alert('Error guardando empleado'); }
+    });
   }
 
   async function cargarProductos() {

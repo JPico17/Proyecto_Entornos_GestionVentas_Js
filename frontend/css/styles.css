@@ -193,6 +193,13 @@ html, body {
 #productoFormContainer .actions { grid-column: 1 / -1; display:flex; gap:8px; }
 .ghost { background:transparent; border:1px solid #888; color:#333; }
 
+/* Empleado form styles reuse same card/grid pattern */
+#empleadoFormContainer .card { padding:12px; background:#fff; border:1px solid #e3e3e3; border-radius:6px; }
+#empleadoFormContainer .grid { display:grid; grid-template-columns: 1fr 1fr; gap:8px; align-items:end; }
+#empleadoFormContainer .field { display:block; }
+#empleadoFormContainer .field span { display:block; font-size:12px; color:#333; margin-bottom:4px; }
+#empleadoFormContainer .actions { grid-column: 1 / -1; display:flex; gap:8px; }
+
 .filter-actions {
   display: flex;
   gap: 10px;
