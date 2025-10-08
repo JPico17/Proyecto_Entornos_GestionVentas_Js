@@ -1,0 +1,53 @@
+/* css/styles.css - plantilla básica */
+:root {
+  --bg: #ffffff;
+  --fg: #111827;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --card: #f8fafc;
+}
+
+[data-theme="dark"] {
+  --bg: #0b1220;
+  --fg: #e6eef8;
+  --muted: #9aa7bd;
+  --accent: #60a5fa;
+  --card: #071022;
+}
+
+* { box-sizing: border-box; }
+html,body { height:100%; margin:0; font-family:Inter,system-ui,Arial; background:var(--bg); color:var(--fg); }
+
+.container { max-width:1100px; margin:20px auto; padding:0 16px; }
+.nav-inner { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; }
+.brand { font-weight:700; text-decoration:none; color:var(--fg); }
+.tag { background:var(--accent); color:white; padding:2px 6px; border-radius:6px; margin-right:8px; font-size:12px; }
+
+.nav-links { display:flex; gap:8px; align-items:center; }
+.btn { background:var(--accent); border:none; color:white; padding:8px 10px; border-radius:8px; cursor:pointer; text-decoration:none; }
+.btn.ghost { background:transparent; color:var(--fg); border:1px solid rgba(0,0,0,0.06); }
+.user { font-size:14px; color:var(--muted); margin-left:12px; }
+
+.auth { display:flex; justify-content:center; align-items:center; height:75vh; }
+.card { background:var(--card); padding:16px; border-radius:8px; box-shadow:0 1px 6px rgba(0,0,0,0.04); width:100%; max-width:420px; }
+.field { display:block; margin-bottom:12px; }
+.field span { display:block; margin-bottom:6px; color:var(--muted); font-size:13px; }
+input { width:100%; padding:10px; border-radius:6px; border:1px solid #e6e9ee; }
+
+.actions { display:flex; gap:8px; margin-top:8px; }
+
+.grid { display:grid; gap:12px; margin-top:12px; }
+.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.card > h3 { margin:0 0 8px 0; }
+.table { width:100%; border-collapse:collapse; margin-top:12px; }
+.table th, .table td { padding:8px 10px; border-bottom:1px solid #e6e9ee; text-align:left; }
+.footer-inner { display:flex; justify-content:space-between; align-items:center; padding:12px 0; color:var(--muted); font-size:13px; }
+
+
+.info-box {
+  background: var(--card);
+  border: 1px solid #e2e8f0;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 10px 0;
+}

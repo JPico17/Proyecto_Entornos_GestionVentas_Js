@@ -6,8 +6,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "cliente")
+@JsonIgnoreProperties({"ventas"})
 public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

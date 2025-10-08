@@ -1,45 +1,38 @@
 package com.ventas.backend.controller;
 
+import com.ventas.backend.dto.VentaDTO;
 import com.ventas.backend.model.Venta;
-import com.ventas.backend.repository.VentaRepository;
+import com.ventas.backend.service.VentaService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/ventas")
+@CrossOrigin(origins = "*")
 public class VentaController {
 
-    private final VentaRepository ventaRepository;
+    private final VentaService ventaService;
 
-    public VentaController(VentaRepository ventaRepository) {
-        this.ventaRepository = ventaRepository;
+    public VentaController(VentaService ventaService) {
+        this.ventaService = ventaService;
     }
 
     @GetMapping
-    public List<Venta> listar() {
-        return ventaRepository.findAll();
+    public List<Venta> listarVentas() {
+        return ventaService.listarTodas();
     }
 
     @PostMapping
-    public Venta crear(@RequestBody Venta venta) {
-        return ventaRepository.save(venta);
-    }
-
-    @GetMapping("/{id}")
-    public Venta obtenerPorId(@PathVariable Long id) {
-        return ventaRepository.findById(id).orElse(null);
-    }
-
-    @PutMapping("/{id}")
-    public Venta actualizar(@PathVariable Long id, @RequestBody Venta venta) {
-        venta.setId(id);
-        return ventaRepository.save(venta);
-    }
-
-    @DeleteMapping("/{id}")
-    public void eliminar(@PathVariable Long id) {
-        ventaRepository.deleteById(id);
+    public ResponseEntity<?> registrarVenta(@RequestBody VentaDTO dto) {
+        try {
+            Venta nueva = ventaService.registrarVenta(dto);
+            return ResponseEntity.ok(nueva);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
+
 

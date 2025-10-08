@@ -16,7 +16,7 @@ public class SucursalController {
         this.sucursalRepository = sucursalRepository;
     }
 
-    @GetMapping
+    @GetMapping 
     public List<Sucursal> listar() {
         return sucursalRepository.findAll();
     }

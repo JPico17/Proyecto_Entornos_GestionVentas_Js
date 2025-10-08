@@ -65,4 +65,24 @@ public class VentaService {
 
         return ventaRepo.save(venta);
     }
+    @Transactional(readOnly = true)
+    public List<Venta> listarTodas() {
+        List<Venta> ventas = ventaRepo.findAll();
+        // Forzamos la carga de los detalles (y sus productos)
+        for (Venta v : ventas) {
+            v.getDetalles().size(); // Inicializa la colección
+            if (v.getDetalles() != null) {
+                v.getDetalles().forEach(d -> d.getProducto().getNombre());
+            }
+        }
+        return ventas;
+    }
+
+    public List<DetalleVenta> listarDetallesPorVenta(Long ventaId) {
+    return ventaRepo.findById(ventaId)
+        .map(Venta::getDetalles)
+        .orElse(List.of());
+    }
+
+
 }

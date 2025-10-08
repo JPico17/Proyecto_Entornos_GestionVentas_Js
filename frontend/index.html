@@ -1,151 +1,31 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Gestión de Ventas</title>
-  <meta name="description" content="Portada tipo vinilo para el proyecto Gestión de Ventas. Front-only listo para conectar con tu API." />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
   <script>
-  
-  if (localStorage.getItem('loggedIn') !== 'true') {
-    window.location.href = 'login.html';
-  }
-</script>
-  <nav>
-    <div class="container nav-inner">
-      <a href="#" class="brand">
-        <span class="tag">LOGO</span>
-        <span>Gestión de Ventas</span>
-      </a>
-      <div class="nav-links">
-        <a href="#features" class="btn" id="featuresBtn">Características</a>
-        <a href="#demo" class="btn" id="demoBtn">Demo</a>
-        <a href="#inventario" class="btn" id="inventarioBtn">Inventario</a>
-        <a href="productos.html" class="btn">productos</a>
-        <button class="theme-toggle" id="themeToggle" title="Cambiar tema">🌗</button>
-        <a href="#contacto" class="btn" id="logoutBtn">Cerrar sesión</a>
-      </div>
-    </div>
-  </nav>
+    // protección: si no hay sesión -> login
+    if (localStorage.getItem('loggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
+  </script>
 
-  <header class="container hero">
-    <div>
-      <h1 class="headline">Gestión de <span class="grad">ventas</span> </h1>
-      <p class="lead">Interfaz para el módulo de ventas/inventario.</p>
-      <div class="hero-actions">
-        <a href="#inventario" class="btn">Ver inventario</a>
-        <a href="#features" class="btn ghost">Cómo funciona</a>
-      </div>
-    </div>
-    <div class="showcase">
-      <div class="cover" aria-label="Carátula"></div>
-      <div class="vinyl" aria-label="Vinilo girando"><div class="label"></div></div>
-    </div>
-  </header>
+  <nav id="navbar"></nav>
 
-  <main>
-    <section id="features">
-      <div class="container">
-        <h2 class="headline" style="font-size:2rem">Características</h2>
-        <div class="grid cols-3" style="margin-top:18px">
-          <article class="card reveal">
-            <h3>JS</h3>
-            <p class="lead">Sin frameworks, fácil de integrar y desplegar.</p>
-          </article>
-          <article class="card reveal">
-            <h3>Modo claro/oscuro</h3>
-            <p class="lead">Conmutación persistente vía <code>localStorage</code>.</p>
-          </article>
-          <article class="card reveal">
-            <h3>Inventario y KPIs</h3>
-            <p class="lead">Tabla de productos y KPIs de ventas de ejemplo.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section id="demo">
-      <div class="container">
-        <h2 class="headline" style="font-size:2rem">Demo rápida</h2>
-        <div class="grid cols-3" style="margin-top:18px">
-          <div class="card reveal">
-            <h4>Ventas del día</h4>
-            <p class="lead" id="kpiVentas">Cargando…</p>
-          </div>
-          <div class="card reveal">
-            <h4>Rutas sugeridas</h4>
-            <ul style="margin:0; padding-left:1.1rem">
-              <li><code>GET /api/productos</code></li>
-              <li><code>POST /api/ventas</code></li>
-              <li><code>GET /api/estadisticas</code></li>
-            </ul>
-          </div>
-          <div class="card reveal">
-            <h4>Integración</h4>
-            <ol style="margin:0; padding-left:1.2rem">
-              <li>Despliega este front en tu hosting.</li>
-              <li>Reemplaza el mock</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="inventario">
-      <div class="container">
-        <h2 class="headline" style="font-size:2rem">Inventario</h2>
-        <div class="card reveal">
-          <div style="overflow:auto">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>ID</th><th>Producto</th><th>Precio</th><th>Stock</th><th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="productosBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="contacto">
-      <div class="container">
-        <h2 class="headline" style="font-size:2rem">Contacto</h2>
-        <div class="card reveal">
-          <form id="contactForm" class="grid" style="grid-template-columns:1fr 1fr; gap:12px">
-            <label>Nombre<br><input name="name" required class="input" /></label>
-            <label>Email<br><input type="email" name="email" required class="input" /></label>
-            <label style="grid-column:1/-1">Mensaje<br><textarea name="message" rows="4" required class="input"></textarea></label>
-            <button class="btn" type="submit">Enviar</button>
-            <span id="formMsg" class="tag" style="display:none"></span>
-          </form>
-        </div>
-      </div>
-    </section>
-  </main>
+  <main id="dynamicContent" class="container"></main>
 
   <footer>
-    <div class="container" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap">
+    <div class="container footer-inner">
       <small>© <span id="year"></span> Gestión de Ventas</small>
-      <div style="display:flex; gap:8px">
-        <a href="#" class="tag">Docs</a>
-        <a href="#" class="tag">GitHub</a>
-        <a href="#" class="tag">Soporte</a>
-      </div>
+      <div id="userInfo"></div>
     </div>
   </footer>
 
-  <script src="app.js"></script>
-  <script>
-    document.getElementById('logoutBtn').addEventListener('click', function(e) {
-      e.preventDefault();
-      localStorage.removeItem('loggedIn');
-      window.location.href = 'login.html';
-    });
-  </script>
+  <script src="js/app.js"></script>
 </body>
 </html>
+

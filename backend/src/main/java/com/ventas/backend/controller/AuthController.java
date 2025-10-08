@@ -1,19 +1,19 @@
 package com.ventas.backend.controller;
 
 import com.ventas.backend.dto.LoginRequest;
-import com.ventas.backend.dto.LoginResponse;
 import com.ventas.backend.model.Empleado;
 import com.ventas.backend.repository.EmpleadoRepository;
-
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     @Autowired
@@ -21,20 +21,31 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        Optional<Empleado> empleado = empleadoRepository.findByNombreAndContraseña(
-                request.getUsername(),
-                request.getPassword());
+        Optional<Empleado> empleadoOpt = empleadoRepository.findByEmailAndPassword(
+                request.getEmail(),
+                request.getPassword()
+        );
 
-        if (empleado == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales inválidas");
+        if (empleadoOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("mensaje", "❌ Credenciales inválidas"));
         }
 
-        // Crear respuesta sin incluir contraseña
-        LoginResponse response = new LoginResponse(
-                empleado.get().getNombre(),
-                empleado.get().getCargo(),
-                "Login exitoso");
+        Empleado empleado = empleadoOpt.get();
 
-        return ResponseEntity.ok(response);
+        // Asegurar que la sucursal se cargue correctamente
+        Long sucursalId = empleado.getSucursal() != null ? empleado.getSucursal().getId() : null;
+
+        return ResponseEntity.ok(Map.of(
+                "id", empleado.getId(),
+                "nombre", empleado.getNombre(),
+                "email", empleado.getEmail(),
+                "role", empleado.getRole().toString(),
+                "sucursalId", sucursalId,
+                "mensaje", "✅ Login exitoso"
+        ));
     }
 }
+
+
+

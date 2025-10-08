@@ -1,0 +1,86 @@
+/* === Estilos generales === */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #1e88e5, #42a5f5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+/* === Contenedor principal del formulario === */
+.login-container {
+  background-color: #ffffff;
+  padding: 2.5rem 3rem;
+  border-radius: 15px;
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.2);
+  width: 350px;
+  text-align: center;
+}
+
+/* === Título === */
+.login-container h2 {
+  margin-bottom: 1.5rem;
+  color: #1976d2;
+  font-size: 1.8rem;
+  letter-spacing: 0.5px;
+}
+
+/* === Inputs === */
+.login-container input {
+  width: 100%;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.login-container input:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 4px rgba(25, 118, 210, 0.3);
+}
+
+/* === Botón === */
+.login-container button {
+  width: 100%;
+  background-color: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.9rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-container button:hover {
+  background-color: #1565c0;
+}
+
+/* === Mensaje de error o éxito === */
+.message {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  font-weight: bold;
+}
+
+.message.error {
+  color: #d32f2f;
+}
+
+.message.success {
+  color: #388e3c;
+}
+
+/* === Responsivo === */
+@media (max-width: 480px) {
+  .login-container {
+    width: 90%;
+    padding: 2rem;
+  }
+}

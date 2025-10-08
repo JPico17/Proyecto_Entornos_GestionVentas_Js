@@ -2,9 +2,11 @@ package com.ventas.backend.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "producto")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Producto {
 
     @Id
@@ -15,11 +17,11 @@ public class Producto {
     private String nombre;
 
     private BigDecimal precio;
-
     private Integer stock;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "sucursal_id")
+    @JsonIgnoreProperties({"empleados", "productos"}) // 👈 importante mantener
     private Sucursal sucursal;
 
     public Producto() {}
@@ -46,3 +48,4 @@ public class Producto {
     public Sucursal getSucursal() { return sucursal; }
     public void setSucursal(Sucursal sucursal) { this.sucursal = sucursal; }
 }
+

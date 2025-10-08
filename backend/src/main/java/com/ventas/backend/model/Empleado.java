@@ -3,10 +3,12 @@ package com.ventas.backend.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "empleado")
+@JsonIgnoreProperties({"sucursal"})
 public class Empleado {
 
     @Id
@@ -30,9 +32,9 @@ public class Empleado {
     private Role role;
 
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sucursal_id", nullable = true)
-    @JsonBackReference
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "sucursal_id")
+    @JsonManagedReference
     private Sucursal sucursal;
 
     public Empleado() {}
