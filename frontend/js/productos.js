@@ -1,9 +1,8 @@
 // productos.js
 const BASE_URL = 'http://localhost:9090/api';
-
+const token = localStorage.getItem('token');
 // Proteger la vista: si no hay sesión, al login, pero con token
 (function checkAuth() {
-  const token = localStorage.getItem('token');
   if (!token) {
     window.location.href = 'login.html';
   }
@@ -11,7 +10,6 @@ const BASE_URL = 'http://localhost:9090/api';
 
 // Headers con token
 function authHeaders(extra = {}) {
-  const token = localStorage.getItem('token'); // 👈 unificado con el resto de JS
   return {
     'Accept': 'application/json',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
