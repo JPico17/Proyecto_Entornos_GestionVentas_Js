@@ -3,6 +3,7 @@ package com.ventas.backend.controller;
 import com.ventas.backend.dto.LoginRequest;
 import com.ventas.backend.model.Empleado;
 import com.ventas.backend.repository.EmpleadoRepository;
+import com.ventas.backend.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,9 @@ public class AuthController {
 
     @Autowired
     private EmpleadoRepository empleadoRepository;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
@@ -38,10 +42,15 @@ public class AuthController {
             }
 
             Empleado empleado = empleadoOpt.get();
-
             Long sucursalId = empleado.getSucursal() != null ? empleado.getSucursal().getId() : null;
 
+            // ✅ Generar el JWT usando el nombre de usuario o email
+            String subject = empleado.getUsuario() != null ? empleado.getUsuario() : empleado.getEmail();
+            String token = jwtUtils.generateToken(subject);
+
+            // ✅ Construir respuesta con token
             Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
             response.put("id", empleado.getId());
             response.put("nombre", empleado.getNombre());
             response.put("usuario", empleado.getUsuario());

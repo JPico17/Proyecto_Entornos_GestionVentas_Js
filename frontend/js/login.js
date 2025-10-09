@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch("http://localhost:9090/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identificador, password })  // 👈 cambio clave aquí
+        body: JSON.stringify({ identificador, password })
       });
 
       if (!res.ok) {
@@ -24,11 +24,21 @@ document.addEventListener("DOMContentLoaded", () => {
       const user = await res.json();
       console.log("🔹 Login exitoso:", user);
 
+      // ✅ Guardar el token JWT en localStorage
+      if (user.token) {
+        localStorage.setItem("token", user.token);
+        alert("🔐 Token JWT guardado en localStorage");
+      } else {
+        console.warn("⚠️ El backend no devolvió token JWT");
+      }
+
+      // ⚠️ Validación de sucursal solo si no es ADMIN
       if ((user.sucursalId === null || user.sucursalId === undefined) && user.role.toUpperCase() !== "ADMIN") {
         alert("⚠️ El empleado no tiene sucursal asignada en la base de datos.");
         return;
       }
 
+      // ✅ Guardar los demás datos
       localStorage.setItem("loggedIn", "true");
       localStorage.setItem("empleadoId", user.id);
       localStorage.setItem("sucursalId", user.sucursalId);

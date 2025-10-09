@@ -1,18 +1,17 @@
 // productos.js
 const BASE_URL = 'http://localhost:9090/api';
 
-// Proteger la vista: si no hay sesión, al login
+// Proteger la vista: si no hay sesión, al login, pero con token
 (function checkAuth() {
-  const logged = localStorage.getItem('loggedIn') === 'true';
-  const usuarioStr = localStorage.getItem('usuario');
-  if (!logged || !usuarioStr) {
+  const token = localStorage.getItem('token');
+  if (!token) {
     window.location.href = 'login.html';
   }
 })();
 
-// Headers con token si existe
+// Headers con token
 function authHeaders(extra = {}) {
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('token'); // 👈 unificado con el resto de JS
   return {
     'Accept': 'application/json',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
