@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
     Optional<Empleado> findByEmailAndPassword(String email, String password);
+
+    Optional<Empleado> findByUsuarioAndPassword(String usuario, String password);
 }

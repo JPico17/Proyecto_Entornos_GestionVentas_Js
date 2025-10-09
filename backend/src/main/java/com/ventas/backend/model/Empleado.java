@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "empleado")
-@JsonIgnoreProperties({"sucursal"})
+@JsonIgnoreProperties({ "sucursal" })
 public class Empleado {
 
     @Id
@@ -17,6 +17,9 @@ public class Empleado {
 
     @Column(nullable = false)
     private String nombre;
+
+    @Column(nullable = false, unique = true)
+    private String usuario;
 
     private String cargo;
     private BigDecimal salario;
@@ -31,16 +34,19 @@ public class Empleado {
     @Column(nullable = false)
     private Role role;
 
-    
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "sucursal_id")
     @JsonManagedReference
     private Sucursal sucursal;
 
-    public Empleado() {}
+    public Empleado() {
+    }
 
-    public Empleado(String nombre, String cargo, BigDecimal salario, String email, String password, Role role, Sucursal sucursal) {
+    public Empleado(String nombre, String usuario, String cargo, BigDecimal salario, String email, String password,
+            Role role,
+            Sucursal sucursal) {
         this.nombre = nombre;
+        this.usuario = usuario;
         this.cargo = cargo;
         this.salario = salario;
         this.email = email;
@@ -49,28 +55,75 @@ public class Empleado {
         this.sucursal = sucursal;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getCargo() { return cargo; }
-    public void setCargo(String cargo) { this.cargo = cargo; }
+    public String getNombre() {
+        return nombre;
+    }
 
-    public BigDecimal getSalario() { return salario; }
-    public void setSalario(BigDecimal salario) { this.salario = salario; }
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getUsuario() {
+        return usuario;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public void setUsuario(String usuario) {
+        this.usuario = usuario;
+    }
 
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
+    public String getCargo() {
+        return cargo;
+    }
 
-    public Sucursal getSucursal() { return sucursal; }
-    public void setSucursal(Sucursal sucursal) { this.sucursal = sucursal; }
+    public void setCargo(String cargo) {
+        this.cargo = cargo;
+    }
+
+    public BigDecimal getSalario() {
+        return salario;
+    }
+
+    public void setSalario(BigDecimal salario) {
+        this.salario = salario;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public Sucursal getSucursal() {
+        return sucursal;
+    }
+
+    public void setSucursal(Sucursal sucursal) {
+        this.sucursal = sucursal;
+    }
 }
-

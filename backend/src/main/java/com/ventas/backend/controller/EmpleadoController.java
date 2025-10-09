@@ -30,6 +30,7 @@ public class EmpleadoController {
             EmpleadoWithSucursalDTO dto = new EmpleadoWithSucursalDTO();
             dto.setId(e.getId());
             dto.setNombre(e.getNombre());
+            dto.setUsuario(e.getUsuario());
             dto.setCargo(e.getCargo());
             dto.setEmail(e.getEmail());
             dto.setRole(e.getRole() != null ? e.getRole().name() : null);
@@ -45,6 +46,7 @@ public class EmpleadoController {
     public Empleado crear(@RequestBody EmpleadoDTO dto) {
         Empleado e = new Empleado();
         e.setNombre(dto.getNombre());
+        e.setUsuario(dto.getUsuario());
         e.setCargo(dto.getCargo());
         e.setSalario(dto.getSalario());
         e.setEmail(dto.getEmail());
@@ -55,7 +57,7 @@ public class EmpleadoController {
             if (dto.getSucursalId() == null)
                 throw new RuntimeException("El empleado con role EMPLOYEE debe tener sucursal asignada");
             Sucursal s = sucursalRepository.findById(dto.getSucursalId())
-                .orElseThrow(() -> new RuntimeException("Sucursal no encontrada"));
+                    .orElseThrow(() -> new RuntimeException("Sucursal no encontrada"));
             e.setSucursal(s);
         } else {
             e.setSucursal(null);
@@ -67,9 +69,10 @@ public class EmpleadoController {
     @PutMapping("/{id}")
     public Empleado actualizar(@PathVariable Long id, @RequestBody EmpleadoDTO dto) {
         Empleado e = empleadoRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
 
         e.setNombre(dto.getNombre());
+        e.setUsuario(dto.getUsuario());
         e.setCargo(dto.getCargo());
         e.setSalario(dto.getSalario());
         e.setEmail(dto.getEmail());
@@ -80,7 +83,7 @@ public class EmpleadoController {
             if (dto.getSucursalId() == null)
                 throw new RuntimeException("El empleado con role EMPLOYEE debe tener sucursal asignada");
             Sucursal s = sucursalRepository.findById(dto.getSucursalId())
-                .orElseThrow(() -> new RuntimeException("Sucursal no encontrada"));
+                    .orElseThrow(() -> new RuntimeException("Sucursal no encontrada"));
             e.setSucursal(s);
         } else {
             e.setSucursal(null);
@@ -97,6 +100,6 @@ public class EmpleadoController {
     @GetMapping("/{id}")
     public Empleado obtener(@PathVariable Long id) {
         return empleadoRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
     }
 }

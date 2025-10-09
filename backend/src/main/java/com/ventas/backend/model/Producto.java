@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "producto")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Producto {
 
     @Id
@@ -21,10 +21,11 @@ public class Producto {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "sucursal_id")
-    @JsonIgnoreProperties({"empleados", "productos"}) // 👈 importante mantener
+    @JsonIgnoreProperties({ "empleados", "productos" }) // 👈 importante mantener
     private Sucursal sucursal;
 
-    public Producto() {}
+    public Producto() {
+    }
 
     public Producto(String nombre, BigDecimal precio, Integer stock, Sucursal sucursal) {
         this.nombre = nombre;
@@ -33,19 +34,43 @@ public class Producto {
         this.sucursal = sucursal;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public BigDecimal getPrecio() { return precio; }
-    public void setPrecio(BigDecimal precio) { this.precio = precio; }
+    public String getNombre() {
+        return nombre;
+    }
 
-    public Integer getStock() { return stock; }
-    public void setStock(Integer stock) { this.stock = stock; }
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 
-    public Sucursal getSucursal() { return sucursal; }
-    public void setSucursal(Sucursal sucursal) { this.sucursal = sucursal; }
+    public BigDecimal getPrecio() {
+        return precio;
+    }
+
+    public void setPrecio(BigDecimal precio) {
+        this.precio = precio;
+    }
+
+    public Integer getStock() {
+        return stock;
+    }
+
+    public void setStock(Integer stock) {
+        this.stock = stock;
+    }
+
+    public Sucursal getSucursal() {
+        return sucursal;
+    }
+
+    public void setSucursal(Sucursal sucursal) {
+        this.sucursal = sucursal;
+    }
 }
-

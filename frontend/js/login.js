@@ -5,14 +5,14 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const email = document.getElementById("email").value.trim();
+    const identificador = document.getElementById("identificador").value.trim();
     const password = document.getElementById("password").value.trim();
 
     try {
       const res = await fetch("http://localhost:9090/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ identificador, password })  // 👈 cambio clave aquí
       });
 
       if (!res.ok) {
@@ -44,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
 
 
 

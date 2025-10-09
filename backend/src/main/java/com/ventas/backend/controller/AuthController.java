@@ -20,45 +20,41 @@ public class AuthController {
     @Autowired
     private EmpleadoRepository empleadoRepository;
 
-@PostMapping("/login")
-public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-    try {
-        Optional<Empleado> empleadoOpt = empleadoRepository.findByEmailAndPassword(
-                request.getEmail(),
-                request.getPassword()
-        );
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            String identificador = request.getIdentificador();
+            String password = request.getPassword();
 
-        if (empleadoOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("mensaje", "❌ Credenciales inválidas"));
-        }
+            Optional<Empleado> empleadoOpt = empleadoRepository.findByEmailAndPassword(identificador, password);
 
-        Empleado empleado = empleadoOpt.get();
+            if (empleadoOpt.isEmpty()) {
+                empleadoOpt = empleadoRepository.findByUsuarioAndPassword(identificador, password);
+            }
 
-        // Asegurar que la sucursal se cargue correctamente
-        // Long sucursalId = empleado.getSucursal() != null ? empleado.getSucursal().getId() : null;
-        Long sucursalId = null;
-        if (empleado.getSucursal() != null) {
-            sucursalId = empleado.getSucursal().getId();
-        }
+            if (empleadoOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("mensaje", "❌ Credenciales inválidas"));
+            }
 
-        // Armamos el JSON sin usar Map.of() (acepta nulls)
+            Empleado empleado = empleadoOpt.get();
+
+            Long sucursalId = empleado.getSucursal() != null ? empleado.getSucursal().getId() : null;
+
             Map<String, Object> response = new HashMap<>();
             response.put("id", empleado.getId());
             response.put("nombre", empleado.getNombre());
+            response.put("usuario", empleado.getUsuario());
             response.put("email", empleado.getEmail());
             response.put("role", empleado.getRole() != null ? empleado.getRole().toString() : "EMPLOYEE");
             response.put("sucursalId", sucursalId);
             response.put("mensaje", "✅ Login exitoso");
 
             return ResponseEntity.ok(response);
-    } catch (Exception e) {
-        e.printStackTrace();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("mensaje", "Error interno: " + e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("mensaje", "Error interno: " + e.getMessage()));
+        }
     }
 }
-}
-
-
-

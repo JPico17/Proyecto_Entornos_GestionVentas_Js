@@ -1,15 +1,22 @@
 package com.ventas.backend.dto;
 
 public class LoginRequest {
-    private String email;
+    private String identificador;
     private String password;
 
-    // Getters y setters
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getIdentificador() {
+        return identificador;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public void setIdentificador(String identificador) {
+        this.identificador = identificador;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }
-
-
