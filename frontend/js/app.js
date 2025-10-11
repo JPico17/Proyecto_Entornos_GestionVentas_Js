@@ -25,6 +25,7 @@
             <a href="#" data-route="dashboard" class="btn">Dashboard</a>
             <a href="#" data-route="empleados" class="btn">Empleados</a>
             <a href="#" data-route="productos" class="btn">Productos</a>
+            <a href="#" data-route="sucursales" class="btn">Sucursales</a>
             <button id="themeToggle" class="btn ghost">🌗</button>
             <button id="logoutBtn" class="btn">Cerrar sesión</button>
           </div>
@@ -66,6 +67,7 @@
     switch (route) {
       case "dashboard": renderAdminDashboard(); break;
       case "empleados": renderEmpleados(); break;
+      case "sucursales": renderSucursales(); break;
       case "productos": renderProductos(); break;
       case "inventario": renderEmployeeHome(); break;
       case "ventas": renderVentas(); break;
@@ -394,6 +396,190 @@
     // Agregar producto (abre form)
     qs('#btnAgregarProducto').addEventListener('click', () => {
       showProductoForm();
+    });
+  }
+
+  async function renderSucursales() {
+    if (role !== 'ADMIN') { routeDispatcher('dashboard'); return; }
+
+    content.innerHTML = `
+      <section>
+        <div class="sucursales-header">
+          <h2>🏢 Sucursales</h2>
+          <div><button id="btnAgregarSucursal" class="btn">Agregar sucursal</button></div>
+        </div>
+
+        <!-- Modal overlay para crear/editar -->
+  <div class="modal-overlay" id="sucursalModalOverlay" aria-hidden="true">
+          <div class="modal-card">
+            <header><h3 id="sucursalModalTitle">Crear sucursal</h3><button id="closeSucursalModal" class="btn ghost">X</button></header>
+            <div>
+              <div class="form-grid">
+                <input id="msNombre" class="input full" placeholder="Nombre" />
+                <input id="msDireccion" class="input" placeholder="Dirección" />
+                <input id="msTelefono" class="input" placeholder="Teléfono" />
+              </div>
+              <div class="modal-actions">
+                <button id="msCancel" class="btn ghost">Cancelar</button>
+                <button id="msSave" class="btn">Guardar</button>
+              </div>
+              <div id="msMsg" class="helper"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="sucursalFormContainer" style="display:none;margin-bottom:12px;"></div>
+        <table class="table">
+          <thead><tr><th>ID</th><th>Nombre</th><th>Dirección</th><th>Teléfono</th><th>Acciones</th></tr></thead>
+          <tbody id="sucursalesBody"></tbody>
+        </table>
+      </section>`;
+
+    // inicializar tabla y modal handlers
+    await cargarSucursalesForApp();
+
+    const overlay = qs('#sucursalModalOverlay');
+    const btnOpen = qs('#btnAgregarSucursal');
+    const btnClose = qs('#closeSucursalModal');
+    const btnCancel = qs('#msCancel');
+    const btnSave = qs('#msSave');
+    const inputNombre = qs('#msNombre');
+    const inputDireccion = qs('#msDireccion');
+    const inputTelefono = qs('#msTelefono');
+    const msg = qs('#msMsg');
+
+    function openModalForCreate() {
+      qs('#sucursalModalTitle').textContent = 'Crear sucursal';
+      inputNombre.value = '';
+      inputDireccion.value = '';
+      inputTelefono.value = '';
+      msg.textContent = '';
+      overlay.style.display = 'flex';
+      overlay.setAttribute('aria-hidden', 'false');
+      inputNombre.focus();
+    }
+
+    function closeModal() { overlay.style.display = 'none'; }
+
+    btnOpen.addEventListener('click', openModalForCreate);
+  btnClose.addEventListener('click', () => { closeModal(); overlay.setAttribute('aria-hidden','true'); });
+  btnCancel.addEventListener('click', () => { closeModal(); overlay.setAttribute('aria-hidden','true'); });
+
+  btnSave.addEventListener('click', async () => {
+      const nombre = inputNombre.value && inputNombre.value.trim();
+      const direccion = inputDireccion.value && inputDireccion.value.trim();
+      const telefono = inputTelefono.value && inputTelefono.value.trim();
+      if (!nombre) { msg.textContent = 'El nombre es requerido.'; msg.className = 'error'; return; }
+      const editingId = btnSave.getAttribute('data-editing-id');
+      if (editingId) msg.textContent = 'Guardando cambios...';
+      else msg.textContent = 'Creando sucursal...';
+      msg.className = 'helper';
+      try {
+        let res;
+        if (editingId) {
+          res = await fetch(`http://localhost:9090/api/sucursales/${editingId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ nombre, direccion, telefono })
+          });
+        } else {
+          res = await fetch('http://localhost:9090/api/sucursales', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ nombre, direccion, telefono })
+          });
+        }
+        if (res.ok || res.status === 201) {
+          msg.textContent = editingId ? 'Sucursal actualizada ✅' : 'Sucursal creada ✅'; msg.className = 'success';
+          // limpiar modo edición
+          if (editingId) btnSave.removeAttribute('data-editing-id');
+          await cargarSucursalesForApp();
+          setTimeout(() => { closeModal(); }, 700);
+        } else {
+          const t = await res.text(); console.error('Error crear/actualizar sucursal', t);
+          msg.textContent = 'Error al guardar sucursal'; msg.className = 'error';
+        }
+      } catch (err) { console.error(err); msg.textContent = 'Error de red'; msg.className = 'error'; }
+    });
+    // cerrar si se hace click fuera del card
+    overlay.addEventListener('click', (ev) => {
+      if (ev.target === overlay) { closeModal(); overlay.setAttribute('aria-hidden','true'); }
+    });
+
+    // cerrar con Escape
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && overlay.style.display === 'flex') closeModal();
+    });
+  }
+
+  // helper: cargar sucursales para app.js (devuelve JSON y llena tabla)
+  async function cargarSucursalesForApp() {
+    try {
+      const res = await fetch('http://localhost:9090/api/sucursales', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      const tbody = qs('#sucursalesBody'); tbody.innerHTML = '';
+      data.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${s.id}</td><td>${s.nombre}</td><td>${s.direccion||''}</td><td>${s.telefono||''}</td><td>
+            <button data-id="${s.id}" class="btn" data-action="edit-sucursal">Editar</button>
+            <button data-id="${s.id}" class="btn ghost btn-delete-sucursal">Eliminar</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      // Attach edit handlers: abrir modal y prefiller campos
+      qsa('button[data-action="edit-sucursal"]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          try {
+            const r = await fetch(`http://localhost:9090/api/sucursales/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+            if (!r.ok) { alert('No se pudo obtener la sucursal'); return; }
+            const s = await r.json();
+            // rellenar modal
+            const overlay = qs('#sucursalModalOverlay');
+            qs('#sucursalModalTitle').textContent = 'Editar sucursal';
+            qs('#msNombre').value = s.nombre || '';
+            qs('#msDireccion').value = s.direccion || '';
+            qs('#msTelefono').value = s.telefono || '';
+            qs('#msMsg').textContent = '';
+            // marcar modo edición
+            qs('#msSave').setAttribute('data-editing-id', id);
+            overlay.style.display = 'flex';
+            overlay.setAttribute('aria-hidden', 'false');
+            qs('#msNombre').focus();
+          } catch (err) { console.error(err); alert('Error al cargar sucursal'); }
+        });
+      });
+
+      qsa('.btn-delete-sucursal').forEach(b => b.addEventListener('click', async (ev) => {
+        const id = b.getAttribute('data-id');
+        if (!confirm('¿Eliminar sucursal?')) return;
+        await fetch(`http://localhost:9090/api/sucursales/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        cargarSucursalesForApp();
+      }));
+    } catch (err) { console.error('Error cargando sucursales en app:', err); }
+  }
+
+  function showSucursalForm() {
+    const container = qs('#sucursalFormContainer');
+    container.style.display = 'block';
+    container.innerHTML = `
+      <form id="appSucursalForm">
+        <input name="nombre" placeholder="Nombre" required />
+        <input name="direccion" placeholder="Dirección" />
+        <input name="telefono" placeholder="Teléfono" />
+        <button type="submit">Crear sucursal</button>
+      </form>`;
+
+    qs('#appSucursalForm').addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const fd = new FormData(ev.target);
+      const body = { nombre: fd.get('nombre'), direccion: fd.get('direccion'), telefono: fd.get('telefono') };
+      try {
+        await fetch('http://localhost:9090/api/sucursales', { method: 'POST', headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
+        container.style.display = 'none';
+        cargarSucursalesForApp();
+      } catch (err) { console.error('Error creando sucursal:', err); }
     });
   }
 
@@ -907,7 +1093,10 @@ async function cargarKPIs() {
            <td>$${formatMoney(p.precio)}</td>
            <td>${p.stock}</td>
            <td>${p.sucursal ? p.sucursal.nombre : '-'}</td>
-           <td><button class="btn" data-id="${p.id}" data-action="edit">Editar</button></td>
+           <td>
+             <button class="btn" data-id="${p.id}" data-action="edit">Editar</button>
+             <button class="btn danger" data-id="${p.id}" data-action="delete">Eliminar</button>
+           </td>
          </tr>`
       ).join("");
 
@@ -926,6 +1115,28 @@ async function cargarKPIs() {
               showProductoForm(prod);
             } else alert('No se pudo obtener producto');
           } catch (err) { console.error(err); alert('Error al obtener producto'); }
+        });
+      });
+
+      // Attach delete handlers
+      qsa('button[data-action="delete"]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          if (!confirm('¿Confirma que desea eliminar este producto?')) return;
+          try {
+            const dRes = await fetch(`http://localhost:9090/api/productos/${id}`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            if (dRes.ok) {
+              await cargarProductos();
+              alert('Producto eliminado');
+            } else {
+              const txt = await dRes.text(); console.error(txt); alert('Error eliminando producto');
+            }
+          } catch (err) { console.error(err); alert('Error eliminando producto'); }
         });
       });
     } else {
@@ -964,7 +1175,7 @@ async function cargarKPIs() {
           <label class="field"><span>Precio</span><input id="prodPrecio" type="number" step="0.01" value="${producto ? producto.precio : ''}" /></label>
           <label class="field"><span>Stock</span><input id="prodStock" type="number" value="${producto ? producto.stock : 0}" /></label>
           <label class="field"><span>Sucursal</span>
-            <select id="prodSucursal"><option value="">-- Ninguna --</option>${sucursales.map(s=>`<option value="${s.id}" ${producto && producto.sucursal && producto.sucursal.id==s.id ? 'selected' : ''}>${s.nombre}</option>`).join('')}</select>
+            <select id="prodSucursal" required><option value="">-- Seleccione sucursal --</option>${sucursales.map(s=>`<option value="${s.id}" ${producto && producto.sucursal && producto.sucursal.id==s.id ? 'selected' : ''}>${s.nombre}</option>`).join('')}</select>
           </label>
           <div class="actions"><button id="prodSave" class="btn">Guardar</button> <button id="prodCancel" class="btn ghost">Cancelar</button></div>
         </div>
@@ -976,8 +1187,9 @@ async function cargarKPIs() {
       const nombre = qs('#prodNombre').value && qs('#prodNombre').value.trim();
       const precio = parseFloat(qs('#prodPrecio').value) || 0;
       const stock = parseInt(qs('#prodStock').value) || 0;
-      const sucId = qs('#prodSucursal').value ? parseInt(qs('#prodSucursal').value) : null;
-      if (!nombre) { alert('Nombre es requerido'); return; }
+  const sucId = qs('#prodSucursal').value ? parseInt(qs('#prodSucursal').value) : null;
+  if (!nombre) { alert('Nombre es requerido'); return; }
+  if (!sucId) { alert('⚠️ Debe seleccionar una sucursal antes de crear el producto.'); return; }
       const payload = { nombre, precio, stock, sucursalId: sucId };
       try {
         let res;

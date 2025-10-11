@@ -24,12 +24,17 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {
                 })
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/login").permitAll()
-                        // Ejemplo: proteger /api/** excepto login
-                        .requestMatchers("/api/**").authenticated()
-                        .anyRequest().permitAll())
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            .requestMatchers("/api/login").permitAll()
+                        // Permitir temporalmente listar y modificar empleados sin token (solo para depuración)
+                        .requestMatchers(HttpMethod.GET, "/api/empleados").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/empleados").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/empleados/*").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/empleados/*").permitAll()
+            // Ejemplo: proteger /api/** excepto las excepciones anteriores
+            .requestMatchers("/api/**").authenticated()
+            .anyRequest().permitAll())
                 // ✅ registrar nuestro filtro JWT
                 .addFilterBefore(new JwtTokenValidator(jwtUtils), UsernamePasswordAuthenticationFilter.class);
 
