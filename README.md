@@ -4,7 +4,11 @@ Este proyecto es un **sistema de gestión de ventas** diseñado para administrar
 Permite gestionar clientes, empleados, productos y registrar ventas con sus respectivos detalles, manteniendo un control centralizado de la información.
 
 ---
-
+## Integrantes
+- Juan Pablo Avila Quitian - 2214107
+- Sergio Nelson Alberto Gomez Gil - 2214106
+- Jean Carlo Rodriguez Pico - 2214116
+---
 ## Características principales
 - 📍 **Sucursales**: administración de varias sedes de venta.
 - 👨‍💼 **Empleados**: gestión de personal por sucursal.
